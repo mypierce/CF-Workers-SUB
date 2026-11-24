@@ -312,11 +312,11 @@ function clashFix(content) {
 		}
 		if (line.includes('type: tuic') && line.includes('%3A')) {
 			let prefix = '';
-			line = line.replace(/uuid:\s*([a-f0-9-]+)%3A([a-f0-9]+)@\[?([a-f0-9:]*)/i, (m, uuid, pass, p) => {
+			line = line.replace(/uuid:\s*["']?([a-f0-9-]+)%3A([a-f0-9]+)@\[?([a-f0-9:]*)["']?/i, (m, uuid, pass, p) => {
 				prefix = p;
 				return `uuid: ${uuid}, password: ${pass}`;
 			});
-			line = line.replace(/server:\s*([a-f0-9:]+)\]/i, (m, suffix) => {
+			line = line.replace(/server:\s*["']?([a-f0-9:]+)\]["']?/i, (m, suffix) => {
 				let full = prefix ? `${prefix}:${suffix}` : suffix;
 				return `server: ${full}`;
 			});
