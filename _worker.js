@@ -302,28 +302,29 @@ async function MD5MD5(text) {
 }
 
 function clashFix(content) {
-	if (content.includes('wireguard') && !content.includes('remote-dns-resolve')) {
-		let lines;
-		if (content.includes('\r\n')) {
-			lines = content.split('\r\n');
-		} else {
-			lines = content.split('\n');
+	let lines = content.includes('\r\n') ? content.split('\r\n') : content.split('\n');
+	let result = [];
+	for (let line of lines) {
+		if (line.includes('type: wireguard') && !line.includes('remote-dns-resolve')) {
+			const 备改内容 = `, mtu: 1280, udp: true`;
+			const 正确内容 = `, mtu: 1280, remote-dns-resolve: true, udp: true`;
+			line = line.replace(new RegExp(备改内容, 'g'), 正确内容);
 		}
-
-		let result = "";
-		for (let line of lines) {
-			if (line.includes('type: wireguard')) {
-				const 备改内容 = `, mtu: 1280, udp: true`;
-				const 正确内容 = `, mtu: 1280, remote-dns-resolve: true, udp: true`;
-				result += line.replace(new RegExp(备改内容, 'g'), 正确内容) + '\n';
-			} else {
-				result += line + '\n';
-			}
+		if (line.includes('type: tuic') && line.includes('%3A')) {
+			let prefix = '';
+			line = line.replace(/uuid:\s*([a-f0-9-]+)%3A([a-f0-9]+)@\[?([a-f0-9:]*)/i, (m, uuid, pass, p) => {
+				prefix = p;
+				return `uuid: ${uuid}, password: ${pass}`;
+			});
+			line = line.replace(/server:\s*([a-f0-9:]+)\]/i, (m, suffix) => {
+				let full = prefix ? `${prefix}:${suffix}` : suffix;
+				return `server: ${full}`;
+			});
+			line = line.replace(/,\s*ip:\s*[^,}]+/i, '');
 		}
-
-		content = result;
+		result.push(line);
 	}
-	return content;
+	return result.join('\n');
 }
 
 async function proxyURL(proxyURL, url) {
